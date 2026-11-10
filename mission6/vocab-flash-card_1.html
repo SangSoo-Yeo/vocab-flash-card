@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>영단어 플래시카드</title>
+<style>
+:root{
+  --paper:#f6f3ec; --surface:#fffefb; --ink:#20262e; --muted:#5b6470; --line:#ddd7ca;
+  --accent:#17616b; --accent-soft:#e0eeee; --good:#17803f; --good-soft:#e2f3e8;
+  --bad:#c0342b; --bad-soft:#fbe7e4; --warn:#8a5200; --warn-soft:#fdf0d5; --rule:#d9534f;
+}
+*{box-sizing:border-box}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);line-height:1.55;
+  font-family:system-ui,-apple-system,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  word-break:keep-all;overflow-wrap:anywhere}
+h1,h2,h3,p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+.band{padding:.7rem 1rem;font-weight:600;text-align:center}
+.band.bad{background:var(--bad);color:#fff}
+.band.warn{background:var(--warn-soft);color:var(--warn)}
+[hidden]{display:none!important}
+header.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:960px;margin:0 auto;padding:.9rem 1rem 0}
+.brand{font-size:1.3rem;font-weight:800;letter-spacing:-.01em}
+.tabs{display:flex;gap:.25rem;margin-top:.5rem}
+.tab{appearance:none;background:none;border:0;border-bottom:3px solid transparent;padding:.6rem .9rem;
+  cursor:pointer;font-weight:600;color:var(--muted);min-height:44px}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+main{max-width:960px;margin:0 auto;padding:1.25rem 1rem 6rem}
+:focus-visible{outline:3px solid #2a8fa0;outline-offset:2px}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.5rem .85rem;
+  min-height:44px;cursor:pointer;font-weight:600}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{cursor:not-allowed;opacity:.5}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--bad)}
+.btn.good{background:var(--good);border-color:var(--good);color:#fff}
+.btn.bad{background:var(--bad);border-color:var(--bad);color:#fff}
+.row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.between{justify-content:space-between}
+.grow{flex:1 1 12rem;min-width:0}
+.field{border:1px solid #b9b2a3;border-radius:8px;background:#fff;padding:.5rem .7rem;min-height:44px;width:100%}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:1rem;margin-top:1rem}
+.empty{text-align:center;color:var(--muted);padding:2.5rem 1rem}
+.empty .btn{margin-top:1rem;color:var(--ink)}
+.inline-msg{color:var(--bad);font-weight:600;margin-top:.5rem}
+.set-card h3{font-size:1.15rem}
+.stats{display:flex;flex-wrap:wrap;gap:.25rem 1rem;margin:.35rem 0 .8rem;color:var(--muted)}
+.stats b{color:var(--ink)}
+.ed-head input{font-size:1.15rem;font-weight:700}
+.add-grid{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.5rem;align-items:end}
+.add-grid label{display:block;font-weight:600}
+table{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:1rem;background:var(--surface);border:1px solid var(--line)}
+th,td{border-bottom:1px solid var(--line);padding:.35rem .4rem;text-align:left;vertical-align:top}
+th{background:#eee9dd}
+.c-no{width:4rem}.c-st{width:5.5rem}.c-del{width:5rem}
+.cell{min-height:40px;padding:.35rem .4rem;border-radius:6px;cursor:text;white-space:pre-wrap;border:1px solid transparent}
+.cell:hover{border-color:var(--line);background:#fff}
+.cell textarea{display:block;width:100%;border:0;padding:0;background:transparent;resize:none;outline:none;overflow:hidden}
+.cell.editing{border-color:var(--accent);background:#fff}
+.badge{display:inline-block;font-weight:700;padding-top:.35rem}
+.st-correct{color:var(--good)}.st-wrong{color:var(--bad)}.st-unseen{color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:1.25rem;transform:translateX(-50%);background:#20262e;color:#fff;padding:.65rem 1rem;
+  border-radius:8px;z-index:50;width:max-content;max-width:calc(100vw - 2rem);text-align:center}
+.undo{position:fixed;left:50%;bottom:4.75rem;transform:translateX(-50%);background:var(--surface);border:1px solid var(--accent);
+  padding:.45rem .55rem .45rem 1rem;border-radius:8px;z-index:49;display:flex;gap:.75rem;align-items:center;
+  width:max-content;max-width:calc(100vw - 2rem);box-shadow:0 4px 14px rgba(0,0,0,.15)}
+dialog{border:0;border-radius:12px;padding:1.25rem;width:min(92vw,480px);color:var(--ink)}
+dialog::backdrop{background:rgba(25,30,36,.5)}
+dialog ul{margin:.75rem 0 0;padding-left:1.1rem}
+.dlg-actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1.25rem}
+.study{max-width:680px;margin:0 auto}
+.opt{margin-top:1.1rem}
+.opt-title{font-weight:700;margin-bottom:.4rem}
+.choice{display:grid;gap:.5rem}
+.choice.two{grid-template-columns:1fr 1fr}
+.choose{appearance:none;background:#fff;border:1px solid #b9b2a3;border-radius:8px;padding:.6rem .85rem;min-height:44px;cursor:pointer;
+  font-weight:600;display:flex;justify-content:space-between;gap:.75rem;text-align:left}
+.choose[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent);color:#0d4a52}
+.notice{margin-top:1rem;font-weight:600;color:var(--warn)}
+.start-btn{width:100%;margin-top:1.1rem;font-size:1.1rem}
+.progress-row{display:flex;align-items:center;gap:.75rem}
+.count{font-weight:800;font-size:1.1rem;white-space:nowrap}
+.bar{flex:1;height:8px;border-radius:4px;background:#e4dfd2;overflow:hidden}
+.bar>div{height:100%;background:var(--accent);transition:width .2s}
+.flash{position:relative;margin-top:1rem;min-height:300px;background:var(--surface);border:3px solid var(--line);border-radius:14px;
+  padding:2.25rem 1.25rem 1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1rem;
+  box-shadow:0 3px 0 #e4dfd2}
+.flash::before{content:"";position:absolute;left:0;right:0;top:1.1rem;border-top:2px solid var(--rule);opacity:.45}
+.flash:focus{outline:none}
+.q{font-size:2.25rem;font-weight:800;line-height:1.3;white-space:pre-wrap}
+.back-label{color:var(--muted);font-weight:600}
+.a{font-size:2rem;font-weight:800;line-height:1.3;white-space:pre-wrap}
+.hint{background:var(--warn-soft);color:#5f3a00;border-radius:8px;padding:.45rem .8rem;white-space:pre-wrap;max-width:100%}
+.flash.fb-correct{border-color:var(--good)}
+.flash.fb-wrong{border-color:var(--bad);animation:shake .6s ease}
+.mark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.mark svg{width:128px;height:128px;animation:pop .6s ease forwards}
+.fb-correct .mark svg{color:var(--good)}
+.fb-wrong .mark svg{color:var(--bad)}
+@keyframes pop{0%{transform:scale(.4);opacity:0}45%{transform:scale(1.15);opacity:1}100%{transform:scale(1.5);opacity:0}}
+@keyframes shake{0%,100%{transform:translateX(0)}15%,55%{transform:translateX(-10px)}35%,75%{transform:translateX(10px)}}
+@media (prefers-reduced-motion:reduce){
+  .flash.fb-wrong{animation:none}
+  .mark svg{animation:none}
+  .bar>div{transition:none}
+}
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-top:1rem}
+.keys{display:none;color:var(--muted);text-align:center;margin-top:.75rem}
+@media (hover:hover) and (pointer:fine){.keys{display:block}}
+.result{text-align:center}
+.score{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:1.25rem 0}
+.score div{background:#f3efe5;border-radius:10px;padding:.9rem .25rem}
+.score b{display:block;font-size:1.75rem}
+.result .stack{display:grid;gap:.5rem}
+@media (max-width:720px){
+  .add-grid{grid-template-columns:1fr}
+  table,tbody,tr,td{display:block;width:100%}
+  table{border:0;background:none}
+  thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  tr{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.4rem .6rem;margin-bottom:.6rem}
+  td{border:0;display:grid;grid-template-columns:4.5rem minmax(0,1fr);align-items:start;padding:.15rem 0}
+  td::before{content:attr(data-label);font-weight:700;color:var(--muted);padding-top:.35rem}
+  td.c-empty{display:block}
+  td.c-empty::before{content:none}
+  .actions{grid-template-columns:1fr 1fr}
+  .q{font-size:2rem}.a{font-size:1.75rem}
+  .flash{min-height:250px}
+  .choice.two{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="saveWarn" class="band bad" role="alert" hidden>저장에 실패했습니다. CSV로 내보내 백업하세요.</div>
+<div id="dataWarn" class="band warn" role="alert" hidden>저장된 데이터를 읽을 수 없습니다</div>
+<header class="top"><div class="top-in">
+  <div class="brand">영단어 플래시카드</div>
+  <nav class="tabs" role="tablist" aria-label="화면 선택">
+    <button class="tab" id="tabList" role="tab" type="button">카드 세트 목록</button>
+    <button class="tab" id="tabStudy" role="tab" type="button">학습</button>
+  </nav>
+</div></header>
+<main id="view"></main>
+<input id="fileInput" type="file" accept=".csv,.txt" hidden>
+<div id="undo" class="undo" hidden><span>카드를 삭제했습니다</span><button id="undoBtn" class="btn" type="button">삭제 취소</button></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function(){
+'use strict';
+
+var KEY='vocab-flashcards-v1', BROKEN_KEY='vocab-flashcards-v1-broken';
+var MAX_CARDS=2000, LIMITS={word:100,meaning:300,hint:300};
+var STATUS_LABEL={unseen:'미학습',correct:'맞춤',wrong:'틀림'};
+var SVG_CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg>';
+var SVG_X='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M5.5 5.5l13 13M18.5 5.5l-13 13"/></svg>';
+
+var data={sets:[]};
+var ui={tab:'list',editId:null,showNew:false,newErr:''};
+var study={phase:'start',cfg:defaultCfg(),session:null};
+var idSeq=0, undoState=null, undoTimer=0, toastTimer=0;
+
+var $=function(id){return document.getElementById(id)};
+var view=$('view');
+
+function newId(){return Date.now().toString(36)+'-'+(idSeq++).toString(36)+'-'+Math.random().toString(36).slice(2,8)}
+function defaultCfg(){return {setId:null,mode:'all',order:'shuffle',direction:'w2m'}}
+
+function h(tag,attrs){
+  var el=document.createElement(tag);
+  if(attrs)Object.keys(attrs).forEach(function(k){
+    var v=attrs[k];
+    if(v===null||v===undefined||v===false)return;
+    if(k==='class')el.className=v;
+    else if(k.slice(0,2)==='on')el.addEventListener(k.slice(2),v);
+    else if(k==='value')el.value=v;
+    else if(k==='disabled')el.disabled=true;
+    else if(k==='maxLength')el.maxLength=v;
+    else el.setAttribute(k,v===true?'':v);
+  });
+  for(var i=2;i<arguments.length;i++)add(el,arguments[i]);
+  return el;
+}
+function add(el,kid){
+  if(kid===null||kid===undefined||kid===false)return;
+  if(Array.isArray(kid)){kid.forEach(function(k){add(el,k)});return}
+  el.append(kid.nodeType?kid:String(kid));
+}
+function btn(label,onclick,cls,extra){
+  var a={type:'button',class:'btn'+(cls?' '+cls:''),onclick:onclick};
+  if(extra)Object.keys(extra).forEach(function(k){a[k]=extra[k]});
+  return h('button',a,label);
+}
+function toast(msg){
+  var t=$('toast');t.textContent=msg;t.hidden=false;
+  clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.hidden=true},2500);
+}
+
+/* ---------- 저장 ---------- */
+function validData(o){
+  if(!o||typeof o!=='object'||!Array.isArray(o.sets))return false;
+  return o.sets.every(function(s){
+    return s&&typeof s.id==='string'&&typeof s.name==='string'&&typeof s.createdAt==='number'&&Array.isArray(s.cards)&&
+      s.cards.every(function(c){
+        return c&&typeof c.id==='string'&&typeof c.word==='string'&&typeof c.meaning==='string'&&typeof c.hint==='string'&&
+          (c.status==='unseen'||c.status==='correct'||c.status==='wrong');
+      });
+  });
+}
+function load(){
+  var raw;
+  try{raw=localStorage.getItem(KEY)}catch(e){$('saveWarn').hidden=false;return}
+  if(raw===null)return;
+  try{
+    var o=JSON.parse(raw);
+    if(!validData(o))throw new Error('invalid');
+    data=o;
+  }catch(e){
+    $('dataWarn').hidden=false;
+    try{localStorage.setItem(BROKEN_KEY,raw)}catch(e2){$('saveWarn').hidden=false}
+  }
+}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(data));$('saveWarn').hidden=true;return true}
+  catch(e){$('saveWarn').hidden=false;return false}
+}
+function getSet(id){return data.sets.find(function(s){return s.id===id})||null}
+function orderedSets(){
+  return data.sets.slice().reverse().sort(function(a,b){return b.createdAt-a.createdAt});
+}
+function nameTaken(name,exceptId){return data.sets.some(function(s){return s.name===name&&s.id!==exceptId})}
+function uniqueName(base){
+  if(!nameTaken(base))return base;
+  var n=2;
+  while(nameTaken(base+' ('+n+')'))n++;
+  return base+' ('+n+')';
+}
+function countOf(set,st){return set.cards.filter(function(c){return c.status===st}).length}
+
+/* ---------- CSV ---------- */
+function parseCsv(t){
+  var rows=[],f=[],v='',i=0,line=1,start=1,q=false,after=false,atStart=true,n=t.length;
+  function endField(){f.push(v);v='';after=false;atStart=true}
+  function endRow(){endField();rows.push({fields:f,line:start});f=[]}
+  while(i<n){
+    var c=t[i];
+    if(q){
+      if(c==='"'){
+        if(t[i+1]==='"'){v+='"';i+=2;continue}
+        q=false;after=true;i++;continue;
+      }
+      if(c==='\n'||(c==='\r'&&t[i+1]!=='\n'))line++;
+      v+=c;i++;continue;
+    }
+    if(c===','){endField();i++;continue}
+    if(c==='\n'||c==='\r'){
+      if(c==='\r'&&t[i+1]==='\n')i++;
+      i++;endRow();line++;start=line;continue;
+    }
+    if(after)return {error:line+'번째 줄의 큰따옴표 형식이 잘못되었습니다. 닫는 큰따옴표 뒤에 다른 글자가 있습니다.'};
+    if(c==='"'&&atStart){q=true;atStart=false;i++;continue}
+    atStart=false;v+=c;i++;
+  }
+  if(q)return {error:start+'번째 줄의 큰따옴표가 닫히지 않았습니다.'};
+  if(f.length||v!==''||after)endRow();
+  return {rows:rows};
+}
+function cut(s,max){
+  if(s.length<=max)return s;
+  var r=s.slice(0,max),code=r.charCodeAt(r.length-1);
+  if(code>=0xD800&&code<=0xDBFF)r=r.slice(0,-1);
+  return r;
+}
+function unguard(s){return /^'[=+\-@]/.test(s)?s.slice(1):s}
+
+function analyzeCsv(buffer,fileName){
+  var text;
+  try{text=new TextDecoder('utf-8',{fatal:true}).decode(buffer)}
+  catch(e){return {error:'UTF-8 형식의 파일이 필요합니다'}}
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  if(text.indexOf('\u0000')!==-1)return {error:'UTF-8 형식의 파일이 필요합니다'};
+  if(text.trim()==='')return {error:'빈 파일입니다. 불러올 내용이 없습니다.'};
+  var parsed=parseCsv(text);
+  if(parsed.error)return {error:parsed.error};
+  var rows=parsed.rows;
+  while(rows.length&&rows[rows.length-1].fields.length===1&&rows[rows.length-1].fields[0]==='')rows.pop();
+  if(!rows.length)return {error:'빈 파일입니다. 불러올 내용이 없습니다.'};
+  var col={},ignored=[];
+  rows[0].fields.forEach(function(raw,i){
+    var name=raw.trim(),low=name.toLowerCase();
+    if(['word','meaning','hint','status'].indexOf(low)!==-1&&col[low]===undefined)col[low]=i;
+    else if(name!=='')ignored.push(name);
+  });
+  var missing=['word','meaning'].filter(function(k){return col[k]===undefined});
+  if(missing.length)return {error:'헤더에 '+missing.join(', ')+' 열이 없습니다. 첫 줄에 word와 meaning 열이 필요합니다.'};
+  var skipped=[],valid=[];
+  rows.slice(1).forEach(function(r){
+    function get(k){
+      if(col[k]===undefined)return '';
+      var v=r.fields[col[k]];
+      return v===undefined?'':v;
+    }
+    var word=unguard(get('word')),meaning=unguard(get('meaning')),hint=unguard(get('hint')),status=get('status');
+    if(word.trim()===''||meaning.trim()===''){skipped.push(r.line);return}
+    if(status!=='correct'&&status!=='wrong')status='unseen';
+    valid.push({word:word,meaning:meaning,hint:hint,status:status});
+  });
+  if(!valid.length)return {error:'유효한 카드가 없습니다. word와 meaning이 모두 있는 줄이 필요합니다.'};
+  var overflow=Math.max(0,valid.length-MAX_CARDS);
+  var cards=valid.slice(0,MAX_CARDS),truncated=0,seen={},dup=0;
+  cards.forEach(function(c){
+    ['word','meaning','hint'].forEach(function(k){
+      var cutV=cut(c[k],LIMITS[k]);
+      if(cutV!==c[k]){c[k]=cutV;truncated++}
+    });
+    var key='k:'+c.word.toLowerCase();
+    if(seen[key])dup++;else seen[key]=true;
+  });
+  var base=fileName.replace(/\.[^.]*$/,'');
+  if(base.trim()==='')base='불러온 세트';
+  return {name:uniqueName(base),cards:cards,skipped:skipped,dup:dup,ignored:ignored,truncated:truncated,overflow:overflow};
+}
+function csvField(s){
+  if(/^[=+\-@]/.test(s))s="'"+s;
+  if(/[",\r\n]/.test(s))return '"'+s.replace(/"/g,'""')+'"';
+  return s;
+}
+function buildCsv(cards){
+  var lines=['word,meaning,hint,status'];
+  cards.forEach(function(c){
+    lines.push([csvField(c.word),csvField(c.meaning),csvField(c.hint),c.status].join(','));
+  });
+  return '\uFEFF'+lines.join('\r\n')+'\r\n';
+}
+function download(name,content){
+  var url=URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8'}));
+  var a=h('a',{href:url,download:name});
+  document.body.append(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url)},10000);
+}
+function exportSet(set){
+  download(set.name.replace(/[\\/:*?"<>|]/g,'_')+'.csv',buildCsv(set.cards));
+}
+function downloadSample(){
+  download('sample.csv',buildCsv([
+    {word:'apple',meaning:'사과',hint:'과일',status:'correct'},
+    {word:'benevolent',meaning:'자애로운',hint:'b로 시작',status:'wrong'},
+    {word:'diligent',meaning:'부지런한',hint:'d로 시작',status:'unseen'},
+    {word:'abundant',meaning:'풍부한',hint:'a로 시작',status:'unseen'},
+    {word:'reluctant',meaning:'꺼리는',hint:'r로 시작',status:'unseen'}
+  ]));
+}
+
+/* ---------- 대화상자 ---------- */
+function openDialog(content,buttons){
+  var dlg=h('dialog',null,content);
+  var acts=h('div',{class:'dlg-actions'});
+  buttons.forEach(function(b){
+    acts.append(btn(b.label,function(){dlg.close();if(b.action)b.action()},b.cls));
+  });
+  dlg.append(acts);
+  dlg.addEventListener('close',function(){dlg.remove()});
+  document.body.append(dlg);
+  dlg.showModal();
+}
+function confirmDlg(msg,okLabel,action){
+  openDialog(h('p',null,msg),[{label:'취소'},{label:okLabel,cls:'primary',action:action}]);
+}
+function alertDlg(msg){openDialog(h('p',null,msg),[{label:'확인',cls:'primary'}])}
+
+function formatLines(lines){
+  var shown=lines.slice(0,10).join(', ')+'번 줄';
+  if(lines.length>10)shown+=' 외 '+(lines.length-10)+'줄';
+  return shown;
+}
+function showImportPreview(r){
+  var items=[h('li',null,'총 '+r.cards.length+'개 카드')];
+  items.push(h('li',null,r.skipped.length+'줄을 건너뜀'+(r.skipped.length?' ('+formatLines(r.skipped)+')':'')));
+  if(r.dup)items.push(h('li',null,'중복 단어 '+r.dup+'개'));
+  if(r.ignored.length)items.push(h('li',null,'무시한 열: '+r.ignored.join(', ')));
+  if(r.truncated)items.push(h('li',null,'글자 수 상한을 넘어 잘린 칸 '+r.truncated+'건'));
+  if(r.overflow)items.push(h('li',null,'카드가 2,000개를 넘어 앞의 2,000개만 가져옵니다 (제외 '+r.overflow+'개)'));
+  var body=h('div',null,h('h2',{style:'font-size:1.2rem'},'불러오기 미리보기'),
+    h('p',{style:'margin-top:.5rem'},'세트 이름: '+r.name),h('ul',null,items));
+  openDialog(body,[{label:'취소'},{label:'불러오기',cls:'primary',action:function(){
+    data.sets.push({id:newId(),name:uniqueName(r.name),createdAt:Date.now(),
+      cards:r.cards.map(function(c){return {id:newId(),word:c.word,meaning:c.meaning,hint:c.hint,status:c.status}})});
+    save();render();toast(r.cards.length+'개 카드를 불러왔습니다');
+  }}]);
+}
+$('fileInput').addEventListener('change',function(e){
+  var file=e.target.files[0];
+  e.target.value='';
+  if(!file)return;
+  if(!/\.(csv|txt)$/i.test(file.name)){alertDlg('.csv 또는 .txt 파일만 불러올 수 있습니다.');return}
+  file.arrayBuffer().then(function(buf){
+    var r=analyzeCsv(buf,file.name);
+    if(r.error)alertDlg('불러오지 못했습니다. '+r.error);
+    else showImportPreview(r);
+  }).catch(function(){alertDlg('파일을 읽을 수 없습니다.')});
+});
+
+/* ---------- 공통 렌더링 ---------- */
+function setTab(tab){
+  if(tab===ui.tab&&!(tab==='list'&&ui.editId))return;
+  if(tab==='study'&&ui.tab!=='study'){study.cfg=defaultCfg()}
+  if(tab!=='study'){study.session=null;study.phase='start'}
+  ui.tab=tab;ui.editId=null;clearUndo();render();
+}
+$('tabList').addEventListener('click',function(){setTab('list')});
+$('tabStudy').addEventListener('click',function(){setTab('study')});
+
+function render(){
+  var active=document.activeElement,fid=active&&active.dataset?active.dataset.fid:null;
+  $('tabList').setAttribute('aria-selected',ui.tab==='list');
+  $('tabStudy').setAttribute('aria-selected',ui.tab==='study');
+  view.textContent='';
+  if(ui.tab==='list'){if(ui.editId&&getSet(ui.editId))renderEdit();else{ui.editId=null;renderList()}}
+  else renderStudy();
+  if(fid){var el=view.querySelector('[data-fid="'+fid+'"]');if(el&&!el.disabled)el.focus()}
+}
+
+function commitOnEnter(el,fn){
+  var pending=false;
+  el.addEventListener('keydown',function(e){
+    if(e.code!=='Enter'&&e.key!=='Enter')return;
+    if(e.isComposing||e.keyCode===229){pending=true;return}
+    e.preventDefault();fn();
+  });
+  el.addEventListener('compositionend',function(){
+    if(pending){pending=false;setTimeout(fn,0)}
+  });
+}
+
+/* ---------- 목록 ---------- */
+function renderList(){
+  view.append(h('div',{class:'row'},
+    btn('새 세트 만들기',function(){ui.showNew=true;ui.newErr='';render();var i=$('newName');if(i)i.focus()},'primary'),
+    btn('CSV 불러오기',function(){$('fileInput').click()})
+  ));
+  if(ui.showNew){
+    var input=h('input',{id:'newName',class:'field grow','aria-label':'세트 이름',placeholder:'세트 이름'});
+    var submit=function(){
+      var name=input.value.trim();
+      if(!name){ui.newErr='세트 이름을 입력하세요.';render();$('newName').focus();return}
+      if(nameTaken(name)){ui.newErr='같은 이름의 세트가 이미 있습니다.';render();var i=$('newName');i.value=name;i.focus();return}
+      var set={id:newId(),name:name,createdAt:Date.now(),cards:[]};
+      data.sets.push(set);save();ui.showNew=false;ui.newErr='';ui.editId=set.id;render();
+    };
+    commitOnEnter(input,submit);
+    view.append(h('div',{class:'panel'},
+      h('div',{class:'row'},input,btn('확인',submit,'primary'),btn('취소',function(){ui.showNew=false;ui.newErr='';render()})),
+      ui.newErr?h('p',{class:'inline-msg',role:'alert'},ui.newErr):null));
+  }
+  if(!data.sets.length){
+    view.append(h('div',{class:'panel empty'},
+      h('p',null,'카드 세트가 없습니다. 새로 만들거나 CSV 파일을 불러오세요.'),
+      btn('샘플 CSV 받기',downloadSample)));
+    return;
+  }
+  orderedSets().forEach(function(set){
+    view.append(h('article',{class:'panel set-card'},
+      h('h3',null,set.name),
+      h('div',{class:'stats'},
+        h('span',null,'전체 ',h('b',null,set.cards.length)),
+        h('span',null,'맞춤 ',h('b',null,countOf(set,'correct'))),
+        h('span',null,'틀림 ',h('b',null,countOf(set,'wrong'))),
+        h('span',null,'미학습 ',h('b',null,countOf(set,'unseen')))),
+      h('div',{class:'row'},
+        btn('학습하기',function(){
+          study.cfg=defaultCfg();study.cfg.setId=set.id;study.phase='start';study.session=null;
+          ui.tab='study';ui.editId=null;render();
+        },'primary'),
+        btn('편집',function(){ui.editId=set.id;render()}),
+        btn('CSV 내보내기',function(){exportSet(set)}),
+        btn('기록 초기화',function(){
+          confirmDlg('이 세트의 맞춤/틀림 기록을 모두 지웁니다. 계속할까요?','초기화',function(){
+            set.cards.forEach(function(c){c.status='unseen'});save();render();
+          });
+        }),
+        btn('삭제',function(){
+          confirmDlg('세트와 기록이 모두 삭제되며 되돌릴 수 없습니다.','삭제',function(){
+            data.sets=data.sets.filter(function(s){return s.id!==set.id});save();render();
+          });
+        },'danger'))
+    ));
+  });
+}
+
+/* ---------- 편집 ---------- */
+function clearUndo(){clearTimeout(undoTimer);undoState=null;$('undo').hidden=true}
+$('undoBtn').addEventListener('click',function(){
+  if(!undoState)return;
+  var u=undoState,set=getSet(u.setId);
+  clearUndo();
+  if(!set)return;
+  if(set.cards.length>=MAX_CARDS){toast('세트당 카드는 최대 2,000개입니다.');return}
+  set.cards.splice(Math.min(u.index,set.cards.length),0,u.card);
+  save();render();
+});
+
+function renderEdit(){
+  var set=getSet(ui.editId);
+  var nameInput=h('input',{class:'field','aria-label':'세트 이름',value:set.name});
+  var commitName=function(){
+    var v=nameInput.value.trim();
+    if(v===set.name){nameInput.value=set.name;return}
+    if(!v){nameInput.value=set.name;toast('세트 이름은 비워 둘 수 없습니다.');return}
+    if(nameTaken(v,set.id)){nameInput.value=set.name;toast('같은 이름의 세트가 이미 있습니다.');return}
+    set.name=v;nameInput.value=v;save();
+  };
+  nameInput.addEventListener('blur',commitName);
+  commitOnEnter(nameInput,function(){nameInput.blur()});
+
+  var wordI=h('input',{class:'field',maxLength:LIMITS.word,id:'addWord'});
+  var meanI=h('input',{class:'field',maxLength:LIMITS.meaning,id:'addMeaning'});
+  var hintI=h('input',{class:'field',maxLength:LIMITS.hint,id:'addHint'});
+  var tbody=h('tbody');
+  var addForm=h('form',{class:'panel add-grid',novalidate:true,onsubmit:function(e){
+    e.preventDefault();
+    if(wordI.value.trim()===''||meanI.value.trim()===''){toast('영단어와 뜻을 입력하세요.');return}
+    if(set.cards.length>=MAX_CARDS){toast('세트당 카드는 최대 2,000개입니다.');return}
+    set.cards.push({id:newId(),word:wordI.value,meaning:meanI.value,hint:hintI.value,status:'unseen'});
+    save();wordI.value=meanI.value=hintI.value='';renderRows(tbody,set);wordI.focus();
+  }},
+    h('label',{for:'addWord'},'영단어',wordI),
+    h('label',{for:'addMeaning'},'뜻',meanI),
+    h('label',{for:'addHint'},'힌트',hintI),
+    h('button',{type:'submit',class:'btn primary'},'추가'));
+
+  tbody.addEventListener('click',function(e){
+    var del=e.target.closest('[data-del]');
+    if(del){deleteCard(set,del.closest('tr').dataset.id,tbody);return}
+    var cell=e.target.closest('.cell');
+    if(cell)openEditor(set,cell);
+  });
+  tbody.addEventListener('keydown',function(e){
+    if(e.target.classList.contains('cell')&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openEditor(set,e.target)}
+  });
+
+  view.append(h('div',{class:'row ed-head'},h('div',{class:'grow'},nameInput),btn('목록으로',function(){setTab('list')})),
+    addForm,
+    h('table',null,
+      h('thead',null,h('tr',null,
+        h('th',{class:'c-no'},'번호'),h('th',null,'영단어'),h('th',null,'뜻'),h('th',null,'힌트'),
+        h('th',{class:'c-st'},'상태'),h('th',{class:'c-del'},'삭제'))),
+      tbody));
+  renderRows(tbody,set);
+}
+function renderRows(tbody,set){
+  tbody.textContent='';
+  if(!set.cards.length){
+    tbody.append(h('tr',null,h('td',{colspan:6,class:'empty c-empty'},'카드가 없습니다. 위에서 카드를 추가하세요.')));
+    return;
+  }
+  var frag=document.createDocumentFragment();
+  set.cards.forEach(function(c,i){
+    frag.append(h('tr',{'data-id':c.id},
+      h('td',{'data-label':'번호'},h('span',{class:'badge',style:'font-weight:400'},i+1)),
+      cellTd('영단어','word',c,i),cellTd('뜻','meaning',c,i),cellTd('힌트','hint',c,i),
+      h('td',{'data-label':'상태'},h('span',{class:'badge st-'+c.status},STATUS_LABEL[c.status])),
+      h('td',{'data-label':'삭제'},h('button',{type:'button',class:'btn danger','data-del':'1','aria-label':(i+1)+'번 카드 삭제'},'삭제'))
+    ));
+  });
+  tbody.append(frag);
+}
+function cellTd(label,field,c,i){
+  return h('td',{'data-label':label},h('div',{class:'cell','data-field':field,tabindex:0,role:'button','aria-label':(i+1)+'번 '+label+' 수정'},c[field]));
+}
+function openEditor(set,cell){
+  if(cell.classList.contains('editing'))return;
+  var tr=cell.closest('tr'),field=cell.dataset.field;
+  var card=set.cards.find(function(c){return c.id===tr.dataset.id});
+  if(!card)return;
+  var ta=h('textarea',{rows:1,maxLength:LIMITS[field],'aria-label':cell.getAttribute('aria-label')});
+  ta.value=card[field];
+  var fit=function(){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px'};
+  var done=false;
+  var finish=function(saveIt,refocus){
+    if(done)return;
+    done=true;
+    if(saveIt)applyCellEdit(set,card,field,ta.value,tr);
+    cell.classList.remove('editing');
+    cell.setAttribute('tabindex','0');
+    cell.textContent=card[field];
+    if(refocus)cell.focus();
+  };
+  cell.classList.add('editing');
+  cell.removeAttribute('tabindex');
+  cell.textContent='';
+  cell.append(ta);
+  fit();
+  ta.addEventListener('input',fit);
+  ta.addEventListener('blur',function(){finish(true,false)});
+  ta.addEventListener('keydown',function(e){if(e.key==='Escape'){e.preventDefault();finish(false,true)}});
+  commitOnEnter(ta,function(){finish(true,true)});
+  ta.focus();
+  ta.setSelectionRange(ta.value.length,ta.value.length);
+}
+function applyCellEdit(set,card,field,value,tr){
+  var old=card[field];
+  if(old.replace(/\r\n?/g,'\n')===value)return;
+  if(field!=='hint'&&value.trim()===''){toast('영단어와 뜻은 비워 둘 수 없습니다.');return}
+  card[field]=value;
+  if(field!=='hint'&&card.status!=='unseen'){
+    card.status='unseen';
+    var badge=tr.querySelector('.badge[class*="st-"]');
+    badge.className='badge st-unseen';badge.textContent=STATUS_LABEL.unseen;
+    toast('상태가 초기화되었습니다');
+  }
+  save();
+}
+function deleteCard(set,id,tbody){
+  var index=set.cards.findIndex(function(c){return c.id===id});
+  if(index<0)return;
+  var card=set.cards.splice(index,1)[0];
+  save();renderRows(tbody,set);
+  clearTimeout(undoTimer);
+  undoState={setId:set.id,card:card,index:index};
+  $('undo').hidden=false;
+  undoTimer=setTimeout(clearUndo,5000);
+}
+
+/* ---------- 학습 ---------- */
+function reduced(){return window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches}
+function shuffle(a){
+  for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}
+  return a;
+}
+function modeCards(set,mode){
+  if(!set)return [];
+  if(mode==='correct')return set.cards.filter(function(c){return c.status==='correct'});
+  if(mode==='wrong')return set.cards.filter(function(c){return c.status==='wrong'});
+  return set.cards.slice();
+}
+function resolveCfgSet(){
+  var list=orderedSets();
+  if(!getSet(study.cfg.setId))study.cfg.setId=list.length?list[0].id:null;
+  return getSet(study.cfg.setId);
+}
+function beginSession(cards){
+  var ids=cards.map(function(c){return c.id});
+  if(study.cfg.order==='shuffle')shuffle(ids);
+  study.session={setId:study.cfg.setId,ids:ids,index:0,revealed:false,hint:false,locked:false,correct:0,wrong:0,wrongIds:[]};
+  study.phase='running';
+  render();focusFlash();
+}
+function focusFlash(){var f=view.querySelector('.flash');if(f)f.focus({preventScroll:true})}
+function renderStudy(){
+  if(study.phase==='running'&&study.session)renderRunning();
+  else if(study.phase==='result'&&study.session)renderResult();
+  else{study.phase='start';renderStart()}
+}
+function choice(label,count,pressed,fid,onclick){
+  return h('button',{type:'button',class:'choose','aria-pressed':pressed?'true':'false','data-fid':fid,onclick:onclick},
+    h('span',null,label),count===null?null:h('span',null,count+'장'));
+}
+function setCfg(k,v){study.cfg[k]=v;render()}
+function renderStart(){
+  var set=resolveCfgSet(),cfg=study.cfg,list=orderedSets();
+  var sel=h('select',{class:'field','aria-label':'카드 세트 선택','data-fid':'set',disabled:!list.length,onchange:function(e){setCfg('setId',e.target.value)}},
+    list.length?list.map(function(s){return h('option',{value:s.id},s.name)}):h('option',null,'카드 세트 없음'));
+  if(set)sel.value=set.id;
+  var modes=[['all','전체 학습'],['correct','맞춘 카드 복습'],['wrong','틀린 카드 집중 학습']];
+  var count=modeCards(set,cfg.mode).length;
+  view.append(h('section',{class:'study panel'},
+    h('h2',{style:'font-size:1.25rem'},'학습 시작'),
+    h('div',{class:'opt'},h('div',{class:'opt-title'},'카드 세트'),sel),
+    h('div',{class:'opt'},h('div',{class:'opt-title'},'학습 모드'),
+      h('div',{class:'choice'},modes.map(function(m){
+        return choice(m[1],modeCards(set,m[0]).length,cfg.mode===m[0],'m-'+m[0],function(){setCfg('mode',m[0])});
+      }))),
+    h('div',{class:'opt'},h('div',{class:'opt-title'},'카드 순서'),
+      h('div',{class:'choice two'},
+        choice('섞기',null,cfg.order==='shuffle','o-s',function(){setCfg('order','shuffle')}),
+        choice('원래 순서',null,cfg.order==='original','o-o',function(){setCfg('order','original')}))),
+    h('div',{class:'opt'},h('div',{class:'opt-title'},'카드 방향'),
+      h('div',{class:'choice two'},
+        choice('영단어 → 뜻',null,cfg.direction==='w2m','d-w',function(){setCfg('direction','w2m')}),
+        choice('뜻 → 영단어',null,cfg.direction==='m2w','d-m',function(){setCfg('direction','m2w')}))),
+    count===0?h('p',{class:'notice',role:'status'},'해당하는 카드가 없습니다'):null,
+    btn('시작',function(){beginSession(modeCards(getSet(cfg.setId),cfg.mode))},'primary start-btn',{disabled:count===0})
+  ));
+}
+function currentCard(){
+  var s=study.session,set=getSet(s.setId);
+  return set?set.cards.find(function(c){return c.id===s.ids[s.index]}):null;
+}
+function renderRunning(){
+  var s=study.session,card=currentCard();
+  if(!card){study.phase='start';study.session=null;renderStart();return}
+  var total=s.ids.length,cfg=study.cfg;
+  var body=[];
+  if(!s.revealed){
+    body.push(h('div',{class:'q'},cfg.direction==='w2m'?card.word:card.meaning));
+  }else{
+    body.push(h('div',null,h('div',{class:'back-label'},'영단어'),h('div',{class:'a'},card.word)));
+    body.push(h('div',null,h('div',{class:'back-label'},'뜻'),h('div',{class:'a'},card.meaning)));
+  }
+  if(s.hint)body.push(h('div',{class:'hint'},card.hint===''?'등록된 힌트가 없습니다':card.hint));
+  view.append(h('section',{class:'study'},
+    h('div',{class:'progress-row'},
+      h('span',{class:'count'},(s.index+1)+' / '+total),
+      h('div',{class:'bar',role:'progressbar','aria-valuemin':0,'aria-valuemax':total,'aria-valuenow':s.index+1},
+        h('div',{style:'width:'+((s.index+1)/total*100)+'%'})),
+      btn('학습 종료',function(){study.session=null;study.phase='start';render()})),
+    h('div',{class:'flash',id:'flash',tabindex:-1},body),
+    h('div',{class:'actions'},
+      btn('힌트 보기',showHint,null,{disabled:s.hint}),
+      btn('정답 보기',reveal,'primary',{disabled:s.revealed}),
+      btn('맞춤',function(){mark('correct')},'good',{disabled:!s.revealed}),
+      btn('틀림',function(){mark('wrong')},'bad',{disabled:!s.revealed})),
+    h('p',{class:'keys'},'단축키: 스페이스바 정답 보기, ← 틀림, → 맞춤, H 힌트 보기')
+  ));
+}
+function showHint(){
+  var s=study.session;
+  if(!s||study.phase!=='running'||s.locked||s.hint)return;
+  s.hint=true;render();focusFlash();
+}
+function reveal(){
+  var s=study.session;
+  if(!s||study.phase!=='running'||s.locked||s.revealed)return;
+  s.revealed=true;render();focusFlash();
+}
+function mark(result){
+  var s=study.session;
+  if(!s||study.phase!=='running'||!s.revealed||s.locked)return;
+  var card=currentCard();
+  if(!card)return;
+  s.locked=true;
+  card.status=result;
+  save();
+  if(result==='correct')s.correct++;else{s.wrong++;s.wrongIds.push(card.id)}
+  var flash=$('flash');
+  flash.classList.add('fb-'+result);
+  var m=h('div',{class:'mark'});
+  m.innerHTML=result==='correct'?SVG_CHECK:SVG_X;
+  flash.append(m);
+  setTimeout(function(){
+    if(study.session!==s)return;
+    s.index++;s.revealed=false;s.hint=false;s.locked=false;
+    if(s.index>=s.ids.length)study.phase='result';
+    render();
+    if(study.phase==='running')focusFlash();
+  },reduced()?300:600);
+}
+function renderResult(){
+  var s=study.session,total=s.ids.length;
+  var rate=(s.correct/total*100).toFixed(1)+'%';
+  view.append(h('section',{class:'study panel result'},
+    h('h2',{style:'font-size:1.3rem'},'학습 결과'),
+    h('div',{class:'score'},
+      h('div',null,h('b',{class:'st-correct'},s.correct),'맞춘 카드'),
+      h('div',null,h('b',{class:'st-wrong'},s.wrong),'틀린 카드'),
+      h('div',null,h('b',null,rate),'정답률')),
+    h('div',{class:'stack'},
+      btn('틀린 카드만 다시 학습',function(){
+        var set=getSet(s.setId);
+        var cards=set.cards.filter(function(c){return s.wrongIds.indexOf(c.id)!==-1});
+        beginSession(cards);
+      },'primary',{disabled:s.wrong===0}),
+      btn('같은 설정으로 다시 시작',function(){
+        var cards=modeCards(getSet(study.cfg.setId),study.cfg.mode);
+        if(!cards.length){study.session=null;study.phase='start';render();return}
+        beginSession(cards);
+      }),
+      btn('목록으로 돌아가기',function(){setTab('list')}))
+  ));
+}
+document.addEventListener('keydown',function(e){
+  if(ui.tab!=='study'||study.phase!=='running'||!study.session)return;
+  if(e.ctrlKey||e.metaKey||e.altKey||e.shiftKey||document.querySelector('dialog[open]'))return;
+  var tag=e.target.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+  var handled=true;
+  if(e.code==='Space'){if(!e.repeat)reveal()}
+  else if(e.key==='ArrowLeft'){if(!e.repeat)mark('wrong')}
+  else if(e.key==='ArrowRight'){if(!e.repeat)mark('correct')}
+  else if(e.code==='KeyH'){if(!e.repeat)showHint()}
+  else handled=false;
+  if(handled)e.preventDefault();
+});
+
+load();
+render();
+})();
+</script>
+</body>
+</html>
